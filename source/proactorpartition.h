@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "lockfreequeue.h"
+#include "threadaffinity.h"
 
 template <typename COMPUTABLE>
 class ProactorPartition {
@@ -23,7 +24,9 @@ class ProactorPartition {
         computable_(std::forward<Args>(args)...),
         queue_(capacity),
         running_(true),
-        thread_(&ProactorPartition::processQueue, this) {}
+        thread_(&ProactorPartition::processQueue, this) {
+    setThreadAffinity(thread_, partition_index_);
+  }
 
   ~ProactorPartition() { stop(); }
 

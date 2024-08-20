@@ -9,17 +9,26 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 set(SOURCE_FILES
     source/proactor.cpp
+    source/ThreadAffinity.cpp
 )
 
 set(HEADER_FILES
     source/proactor.h
     source/proactorpartition.h
     source/lockfreequeue.h
+    source/ThreadAffinity.h
 )
 
 add_library(proactor_lib ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(proactor_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
+
+# Platform-specific libraries
+if(APPLE)
+    target_link_libraries(proactor_lib PRIVATE "-framework CoreFoundation")
+elseif(UNIX)
+    target_link_libraries(proactor_lib PRIVATE pthread)
+endif()
 
 # Google Test
 include(FetchContent)
