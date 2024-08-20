@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <sstream>
 #include <thread>
 #include <utility>
@@ -19,9 +18,9 @@ class ProactorPartition {
  public:
   template <typename... Args>
   ProactorPartition(std::size_t capacity, std::size_t partition_index,
-                    Args&&... args)
+                    const Args&... args)
       : partition_index_(partition_index),
-        computable_(std::forward<Args>(args)...),
+        computable_(args...),
         queue_(capacity),
         running_(true),
         thread_(&ProactorPartition::processQueue, this) {
@@ -30,18 +29,18 @@ class ProactorPartition {
 
   ~ProactorPartition() { stop(); }
 
-  template <typename Callback, typename RetType, typename... Args>
-  bool process(RetType (COMPUTABLE::*func)(Args...), Callback&& callback,
-               Args... args) {
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool process(MemberFunc func, Callback&& callback, Args&&... args) {
     Function task = [func, callback = std::forward<Callback>(callback),
                      ... capturedArgs = std::forward<Args>(args)](
                         COMPUTABLE* computable) mutable {
-      if constexpr (std::is_void_v<std::invoke_result_t<
-                        decltype(func), COMPUTABLE*, Args...>>) {
-        (computable->*func)(std::forward<Args>(capturedArgs)...);
+      if constexpr (std::is_void_v<std::invoke_result_t<MemberFunc, COMPUTABLE*,
+                                                        Args...>>) {
+        std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
         callback();
       } else {
-        auto result = (computable->*func)(std::forward<Args>(capturedArgs)...);
+        auto result =
+            std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
         callback(std::move(result));
       }
     };

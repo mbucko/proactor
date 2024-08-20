@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <type_traits>
 #include <utility>
 
@@ -13,27 +12,29 @@ template <typename KEY, typename HASH_POLICY, std::size_t N_PARTITIONS,
           typename COMPUTABLE>
 class Proactor {
  private:
-  static_assert(N_PARTITIONS > 0, "N_PARTITIONS must be greater than 0");
   using Partition = ProactorPartition<COMPUTABLE>;
 
  public:
   template <typename... Args>
-  Proactor(std::size_t capacity, Args&&... args) {
+  Proactor(std::size_t capacity, const Args&... args) : hash_policy() {
     for (std::size_t i = 0; i < N_PARTITIONS; ++i) {
-      new (&partitions_[i]) Partition(capacity, i, std::forward<Args>(args)...);
+      new (&partitions_[i]) Partition(capacity, i, args...);
     }
   }
 
   ~Proactor() {
     for (std::size_t i = 0; i < N_PARTITIONS; ++i) {
-      reinterpret_cast<COMPUTABLE*>(&partitions_[i])->~COMPUTABLE();
+      const auto computable = reinterpret_cast<COMPUTABLE*>(&partitions_[i]);
+      if (computable != nullptr) {
+        reinterpret_cast<COMPUTABLE*>(&partitions_[i])->~COMPUTABLE();
+      }
     }
   }
 
-  template <typename Callback, typename RetType, typename... Args>
-  bool process(const KEY& key, RetType (COMPUTABLE::*func)(Args...),
-               Callback&& callback, Args... args) {
-    const std::size_t index = HASH_POLICY{}(key) % N_PARTITIONS;
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool process(const KEY& key, MemberFunc func, Callback&& callback,
+               Args&&... args) {
+    const std::size_t index = hash_policy(key) % N_PARTITIONS;
     Partition* partition = reinterpret_cast<Partition*>(&partitions_[index]);
     return partition->process(func, std::forward<Callback>(callback),
                               std::forward<Args>(args)...);
@@ -46,6 +47,7 @@ class Proactor {
   }
 
  private:
+  HASH_POLICY hash_policy;
   // Couldn't make std::array<COMPUTABLE> ctor work.
   alignas(Partition) char partitions_[N_PARTITIONS][sizeof(Partition)];
 
@@ -56,7 +58,7 @@ class Proactor {
         std::is_same_v<std::invoke_result_t<T, K>, std::size_t>;
   };
 
-  // In your Proactor class:
+  static_assert(N_PARTITIONS > 0, "N_PARTITIONS must be greater than 0");
   static_assert(hash_policy_checks<HASH_POLICY, KEY>::is_callable,
                 "HASH_POLICY must be callable with KEY");
   static_assert(hash_policy_checks<HASH_POLICY, KEY>::returns_size_t,

@@ -1,19 +1,23 @@
 #ifndef ACCUMULATOR_H
 #define ACCUMULATOR_H
 
+#include <cassert>
 #include <cstdint>
+#include <memory>
 
 class Accumulator {
  public:
   Accumulator() = delete;
-  Accumulator(std::uint32_t initial_value) : value_(initial_value) {}
+  Accumulator(const std::unique_ptr<uint32_t> &initial_value,
+              uint32_t init_value2)
+      : value_(*initial_value + init_value2) {}
 
   void add(uint32_t value) { value_ += value; }
 
-  std::uint32_t get() { return value_; }
+  uint32_t get() const { return value_; }
 
  private:
-  std::uint32_t value_;
+  uint32_t value_;
 };
 
 #endif  // ACCUMULATOR_H
