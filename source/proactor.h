@@ -45,11 +45,15 @@ class Proactor {
       reinterpret_cast<Partition*>(&partitions_[i])->stop();
     }
   }
+  // TODO add process that can execute on all partitions
 
  private:
   HASH_POLICY hash_policy;
   // Couldn't make std::array<COMPUTABLE> ctor work.
   alignas(Partition) char partitions_[N_PARTITIONS][sizeof(Partition)];
+  Partition& partition(int i) {
+    return *reinterpret_cast<Partition*>(&partitions_[i]);
+  }
 
   template <typename T, typename K>
   struct hash_policy_checks {
@@ -58,6 +62,7 @@ class Proactor {
         std::is_same_v<std::invoke_result_t<T, K>, std::size_t>;
   };
 
+  // TODO assert that args type match
   static_assert(N_PARTITIONS > 0, "N_PARTITIONS must be greater than 0");
   static_assert(hash_policy_checks<HASH_POLICY, KEY>::is_callable,
                 "HASH_POLICY must be callable with KEY");
