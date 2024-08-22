@@ -69,19 +69,13 @@ class PerformanceTest : public ::testing::Test {
 
   void wait() {
     std::counting_semaphore<kPartitions> semaphore{0};
-    for (int i = 0; i < kPartitions; ++i) {
-      ASSERT_TRUE(
-          startLayer.process(i, &MathOperator::get,
-                             [&semaphore](int64_t) { semaphore.release(); }));
-    }
+    startLayer.process(&MathOperator::get,
+                       [&semaphore](int64_t) { semaphore.release(); });
     for (int i = 0; i < kPartitions; ++i) {
       semaphore.acquire();
     }
-    for (int i = 0; i < kPartitions; ++i) {
-      ASSERT_TRUE(
-          midLayer.process(i, &MathOperator::get,
-                           [&semaphore](int64_t) { semaphore.release(); }));
-    }
+    midLayer.process(&MathOperator::get,
+                     [&semaphore](int64_t) { semaphore.release(); });
     for (int i = 0; i < kPartitions; ++i) {
       semaphore.acquire();
     }

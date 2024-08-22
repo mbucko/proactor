@@ -61,8 +61,10 @@ class Proactor {
 
  private:
   HASH_POLICY hash_policy;
-  // use char because we need to be able to default initialize the array and
-  // Partition might not have default ctor.
+  // Use 'char' array for raw storage to allow placement new initialization.
+  // This approach avoids potential issues with Partition's possible lack of a
+  // default constructor, while still enabling proper alignment and efficient
+  // memory usage.
   alignas(Partition) char partitions_[N_PARTITIONS][sizeof(Partition)];
   Partition& partition(int i) {
     return *reinterpret_cast<Partition*>(&partitions_[i]);
