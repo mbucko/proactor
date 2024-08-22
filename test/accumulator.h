@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <memory>
 
+namespace mbucko_test {
+
 class Accumulator {
  public:
   Accumulator() = delete;
@@ -19,5 +21,7 @@ class Accumulator {
  private:
   uint32_t value_;
 };
+
+}  // namespace mbucko_test
 
 #endif  // ACCUMULATOR_H

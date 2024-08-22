@@ -3,6 +3,8 @@
 
 #include <thread>
 
+namespace mbucko {
+
 struct CoreInfo {
   int performanceCores = 0;
   int efficiencyCores = 0;
@@ -11,5 +13,7 @@ struct CoreInfo {
 CoreInfo getCoreInfo();
 
 void setThreadAffinity(std::thread& t, int coreId);
+
+}  // namespace mbucko
 
 #endif  // THREADAFFINITY_H

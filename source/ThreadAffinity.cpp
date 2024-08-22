@@ -16,6 +16,8 @@
 #include <pthread.h>
 #endif
 
+namespace mbucko {
+
 CoreInfo getCoreInfo() {
   CoreInfo info;
 #ifdef __APPLE__
@@ -78,3 +80,5 @@ void setThreadAffinity(std::thread& t, int coreId) {
   }
 #endif
 }
+
+}  // namespace mbucko

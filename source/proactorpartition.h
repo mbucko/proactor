@@ -12,6 +12,8 @@
 #include "ThreadAffinity.h"
 #include "blockingconcurrentqueue.h"
 
+namespace mbucko {
+
 template <typename COMPUTABLE>
 class ProactorPartition {
  private:
@@ -94,5 +96,7 @@ class ProactorPartition {
   std::thread thread_;
   AdaptiveSleeper sleeper_;
 };
+
+}  // namespace mbucko
 
 #endif  // PROACTORPARTITION_H

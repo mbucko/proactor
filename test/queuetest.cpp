@@ -8,6 +8,7 @@
 #include "Queue.h"
 
 using ::testing::Eq;
+using namespace mbucko;
 
 TEST(LockFreeQueueTest, PushReturnsTrue) {
   Queue<int> queue(4);

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <mutex>
 
+namespace mbucko {
 template <typename T>
 class Queue {
  public:
@@ -55,5 +56,7 @@ class Queue {
   std::size_t size_;
   mutable std::mutex mutex_;
 };
+
+}  // namespace mbucko
 
 #endif  // QUEUE_H

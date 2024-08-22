@@ -1,5 +1,10 @@
+#ifndef ADAPTIVESLEEPER_H
+#define ADAPTIVESLEEPER_H
+
 #include <chrono>
 #include <thread>
+
+namespace mbucko {
 
 class AdaptiveSleeper {
  public:
@@ -34,3 +39,7 @@ class AdaptiveSleeper {
  private:
   uint64_t iteration_count_;
 };
+
+}  // namespace mbucko
+
+#endif  // ADAPTIVESLEEPER_H

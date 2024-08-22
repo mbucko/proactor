@@ -1,5 +1,3 @@
-
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -13,6 +11,8 @@
 #include "Proactor.h"
 
 using ::testing::Eq;
+using namespace mbucko;
+using namespace mbucko_test;
 
 struct Hash {
   std::size_t operator()(int key) const { return key * 1009; }

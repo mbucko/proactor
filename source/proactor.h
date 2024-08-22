@@ -8,12 +8,14 @@
 
 #include "ProactorPartition.h"
 
+namespace mbucko {
+
 /// The Proactor class implements a partitioned, multi-threaded, asynchronous
 /// task processing framework. It distributes tasks across multiple partitions
-/// based on a key and a hash policy, allowing for concurrent execution of tasks
-/// on different COMPUTABLE objects. The class statically allocates N_PARTITIONS
-/// partitions and uses a lock-free queue for efficient data passing between
-/// threads.
+/// based on a key and a hash policy, allowing for concurrent execution of
+/// tasks on different COMPUTABLE objects. The class statically allocates
+/// N_PARTITIONS partitions and uses a lock-free queue for efficient data
+/// passing between threads.
 ///
 /// \tparam KEY
 ///     The type used as a key for task distribution. Must be hashable.
@@ -92,17 +94,18 @@ class Proactor {
     }
   }
 
-  /// Enqueues a task to be processed asynchronously. Uses the provided key and
-  /// HASH_POLICY to determine the partition on which to enqueue the task.  It
-  /// will block until space in the queue becomes available. This function is
-  /// thread-safe and can be called concurrently from multiple threads. Calling
-  /// this function after calling 'stop()' results in undefined behavior.
+  /// Enqueues a task to be processed asynchronously. Uses the provided key
+  /// and HASH_POLICY to determine the partition on which to enqueue the task.
+  /// It will block until space in the queue becomes available. This function
+  /// is thread-safe and can be called concurrently from multiple threads.
+  /// Calling this function after calling 'stop()' results in undefined
+  /// behavior.
   ///
   /// \param[in] key
   ///     The key used to determine the target partition.
   /// \param[in] func
-  ///     A member function pointer of COMPUTABLE to be executed asynchronously
-  ///     on the selected partition.
+  ///     A member function pointer of COMPUTABLE to be executed
+  ///     asynchronously on the selected partition.
   /// \param[in] callback
   ///     A function to be called with the result of func (if any).
   /// \param[in] args
@@ -126,15 +129,15 @@ class Proactor {
   /// function after calling 'stop()' is undefined behavior.
   ///
   /// \param[in] func
-  ///     A member function pointer of COMPUTABLE to be executed asynchronously
-  ///     on the selected partition.
+  ///     A member function pointer of COMPUTABLE to be executed
+  ///     asynchronously on the selected partition.
   /// \param[in] callback
   ///     A function to be called with the result of func (if any).
   /// \param[in] args
   ///     Arguments to be passed to func.
   /// \return
-  ///     Returns true if the task was successfully enqueued on all partitions,
-  ///     false if enqueuing failed for any partition.
+  ///     Returns true if the task was successfully enqueued on all
+  ///     partitions, false if enqueuing failed for any partition.
   template <typename MemberFunc, typename Callback, typename... Args>
   bool process(MemberFunc func, Callback&& callback, Args&&... args) {
     bool success = true;
@@ -182,5 +185,7 @@ class Proactor {
   static_assert(std::is_default_constructible_v<HASH_POLICY>,
                 "HASH_POLICY must be default constructible");
 };
+
+}  // namespace mbucko
 
 #endif  // PROACTOR_H

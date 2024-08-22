@@ -14,6 +14,7 @@
 #include "Proactor.h"
 
 using ::testing::Eq;
+using namespace mbucko;
 
 class MathOperator {
  public:

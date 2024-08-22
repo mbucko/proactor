@@ -8,7 +8,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -glldb -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 set(SOURCE_FILES
-    source/Proactor.cpp
     source/ThreadAffinity.cpp
 )
 
@@ -54,7 +53,6 @@ FetchContent_MakeAvailable(concurrentqueue)
 enable_testing()
 # Test support files
 set(TEST_SUPPORT_FILES
-    test/Accumulator.cpp
     test/Accumulator.h
 )
 
