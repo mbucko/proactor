@@ -40,7 +40,7 @@ class PerformanceTest : public ::testing::Test {
   using key_type = int;
 
   static constexpr std::size_t kPartitions = 10;
-  static constexpr std::size_t kQueueSize = 1 * 1024 * 1024;
+  static constexpr std::size_t kQueueSize = 100 * 1024 * 1024;
 
   Proactor<key_type, Hash, 1, MathOperator> endLayer;
   Proactor<key_type, Hash, kPartitions, MathOperator> midLayer;

@@ -7,7 +7,7 @@
 #include <thread>
 #include <utility>
 
-#include "lockfreequeue.h"
+#include "concurrentqueue.h"
 #include "threadaffinity.h"
 
 template <typename COMPUTABLE>
@@ -45,13 +45,13 @@ class ProactorPartition {
       }
     };
 
-    return queue_.push(std::move(task));
+    return queue_.enqueue(std::move(task));
   }
 
   void processQueue() {
     Function task;
     while (true) {
-      while (queue_.pop(&task)) [[likely]] {
+      while (queue_.try_dequeue(task)) [[likely]] {
         task(&computable_);
       }
 
@@ -83,7 +83,7 @@ class ProactorPartition {
  private:
   const std::size_t partition_index_;
   COMPUTABLE computable_;
-  LockFreeQueue<Function> queue_;
+  moodycamel::ConcurrentQueue<Function> queue_;
   std::atomic<bool> running_;
   std::thread thread_;
 };

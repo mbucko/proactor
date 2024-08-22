@@ -15,8 +15,8 @@ set(SOURCE_FILES
 set(HEADER_FILES
     source/proactor.h
     source/proactorpartition.h
-    source/lockfreequeue.h
     source/ThreadAffinity.h
+    source/queue.h
 )
 
 add_library(proactor_lib ${SOURCE_FILES} ${HEADER_FILES})
@@ -41,6 +41,15 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# moodycamel::ConcurrentQueue
+FetchContent_Declare(
+  concurrentqueue
+  GIT_REPOSITORY https://github.com/cameron314/concurrentqueue.git
+  GIT_TAG v1.0.4
+)
+
+FetchContent_MakeAvailable(concurrentqueue)
+
 enable_testing()
 # Test support files
 set(TEST_SUPPORT_FILES
@@ -57,11 +66,10 @@ add_executable(tests
 )
 target_link_libraries(tests
   PRIVATE
-    proactor_lib
-    GTest::gtest
+    concurrentqueue
     GTest::gtest_main
-    GTest::gmock
     GTest::gmock_main
+    proactor_lib
 )
 
 include(GoogleTest)
