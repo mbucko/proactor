@@ -63,9 +63,7 @@ class ProactorPartition {
         sleeper_.reset();
       }
 
-      if (!running_) {
-        return;
-      }
+      [[unlikely]] if (!running_) { return; }
 
       sleeper_.sleep();
     }

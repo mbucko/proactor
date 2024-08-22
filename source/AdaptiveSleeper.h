@@ -26,7 +26,8 @@ class AdaptiveSleeper {
     } else [[likely]] if (iteration_count_ <= 30) {
       return std::chrono::microseconds(100);
     } else {
-      return std::chrono::microseconds(1000);  // 1ms maximum
+      // 1ms maximum
+      return std::chrono::microseconds(1000);
     }
   }
 

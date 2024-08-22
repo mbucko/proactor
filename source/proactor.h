@@ -43,12 +43,21 @@ class Proactor {
                               std::forward<Args>(args)...);
   }
 
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool process(MemberFunc func, Callback&& callback, Args&&... args) {
+    for (int i = 0; i < N_PARTITIONS; ++i) {
+      Partition* partition = reinterpret_cast<Partition*>(&partitions_[i]);
+      partition->process(func, std::forward<Callback>(callback),
+                         std::forward<Args>(args)...);
+    }
+    return true;
+  }
+
   void stop() noexcept {
     for (std::size_t i = 0; i < N_PARTITIONS; ++i) {
       reinterpret_cast<Partition*>(&partitions_[i])->stop();
     }
   }
-  // TODO add process that can execute on all partitions
 
  private:
   HASH_POLICY hash_policy;
