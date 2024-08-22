@@ -170,18 +170,12 @@ class Proactor {
     return *reinterpret_cast<Partition*>(&partitions_[i]);
   }
 
-  template <typename T, typename K>
-  struct hash_policy_checks {
-    static constexpr bool is_callable = std::is_invocable_v<T, K>;
-    static constexpr bool returns_size_t =
-        std::is_same_v<std::invoke_result_t<T, K>, std::size_t>;
-  };
-
   static_assert(N_PARTITIONS > 0, "N_PARTITIONS must be greater than 0");
-  static_assert(hash_policy_checks<HASH_POLICY, KEY>::is_callable,
+  static_assert(std::is_invocable_v<HASH_POLICY, KEY>,
                 "HASH_POLICY must be callable with KEY");
-  static_assert(hash_policy_checks<HASH_POLICY, KEY>::returns_size_t,
-                "HASH_POLICY must return std::size_t");
+  static_assert(
+      std::is_same_v<std::invoke_result_t<HASH_POLICY, KEY>, std::size_t>,
+      "HASH_POLICY must return std::size_t");
   static_assert(std::is_default_constructible_v<HASH_POLICY>,
                 "HASH_POLICY must be default constructible");
 };
