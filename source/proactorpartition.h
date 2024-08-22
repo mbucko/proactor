@@ -8,6 +8,7 @@
 #include <thread>
 #include <utility>
 
+#include "AdaptiveSleeper.h"
 #include "ThreadAffinity.h"
 #include "blockingconcurrentqueue.h"
 
@@ -59,13 +60,14 @@ class ProactorPartition {
     while (true) {
       while (queue_.try_dequeue(task)) [[likely]] {
         task(&computable_);
+        sleeper_.reset();
       }
 
       if (!running_) {
         return;
       }
 
-      // TODO add backout sleep policy
+      sleeper_.sleep();
     }
   }
 
@@ -92,6 +94,7 @@ class ProactorPartition {
   moodycamel::BlockingConcurrentQueue<Function> queue_;
   std::atomic<bool> running_;
   std::thread thread_;
+  AdaptiveSleeper sleeper_;
 };
 
 #endif  // PROACTORPARTITION_H

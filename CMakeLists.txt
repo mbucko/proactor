@@ -13,6 +13,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    source/AdaptiveSleeper.h
     source/Proactor.h
     source/Proactorpartition.h
     source/ThreadAffinity.h
