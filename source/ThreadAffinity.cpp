@@ -1,4 +1,4 @@
-#include "threadaffinity.h"
+#include "ThreadAffinity.h"
 
 #include <chrono>
 #include <iostream>

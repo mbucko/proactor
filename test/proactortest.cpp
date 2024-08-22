@@ -9,8 +9,8 @@
 #include <semaphore>
 #include <thread>
 
-#include "accumulator.h"
-#include "proactor.h"
+#include "Accumulator.h"
+#include "Proactor.h"
 
 using ::testing::Eq;
 

@@ -16,7 +16,7 @@ class Queue {
 
   ~Queue() { delete[] data_; }
 
-  bool push(const T& value) {
+  bool enqueue(const T& value) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (size_ == capacity_) {
       return false;
@@ -27,7 +27,7 @@ class Queue {
     return true;
   }
 
-  bool pop(T& value) {
+  bool try_deque(T& value) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (size_ == 0) {
       return false;

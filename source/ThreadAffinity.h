@@ -1,5 +1,5 @@
-#ifndef THREAD_AFFINITY_H
-#define THREAD_AFFINITY_H
+#ifndef THREADAFFINITY_H
+#define THREADAFFINITY_H
 
 #include <thread>
 
@@ -12,4 +12,4 @@ CoreInfo getCoreInfo();
 
 void setThreadAffinity(std::thread& t, int coreId);
 
-#endif  // THREAD_AFFINITY_H
+#endif  // THREADAFFINITY_H

@@ -3,12 +3,13 @@
 
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <sstream>
 #include <thread>
 #include <utility>
 
-#include "concurrentqueue.h"
-#include "threadaffinity.h"
+#include "ThreadAffinity.h"
+#include "blockingconcurrentqueue.h"
 
 template <typename COMPUTABLE>
 class ProactorPartition {
@@ -34,6 +35,11 @@ class ProactorPartition {
     Function task = [func, callback = std::forward<Callback>(callback),
                      ... capturedArgs = std::forward<Args>(args)](
                         COMPUTABLE* computable) mutable {
+      static_assert(std::is_member_function_pointer_v<MemberFunc>,
+                    "func must be a member function pointer");
+      static_assert(std::is_invocable_v<MemberFunc, COMPUTABLE*, Args...>,
+                    "Arguments provided to 'process()' function must match the "
+                    "parameters of the COMPUTABLE member function");
       if constexpr (std::is_void_v<std::invoke_result_t<MemberFunc, COMPUTABLE*,
                                                         Args...>>) {
         std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
@@ -83,7 +89,7 @@ class ProactorPartition {
  private:
   const std::size_t partition_index_;
   COMPUTABLE computable_;
-  moodycamel::ConcurrentQueue<Function> queue_;
+  moodycamel::BlockingConcurrentQueue<Function> queue_;
   std::atomic<bool> running_;
   std::thread thread_;
 };

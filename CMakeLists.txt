@@ -8,15 +8,15 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -glldb -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 set(SOURCE_FILES
-    source/proactor.cpp
+    source/Proactor.cpp
     source/ThreadAffinity.cpp
 )
 
 set(HEADER_FILES
-    source/proactor.h
-    source/proactorpartition.h
+    source/Proactor.h
+    source/Proactorpartition.h
     source/ThreadAffinity.h
-    source/queue.h
+    source/Queue.h
 )
 
 add_library(proactor_lib ${SOURCE_FILES} ${HEADER_FILES})
@@ -53,15 +53,15 @@ FetchContent_MakeAvailable(concurrentqueue)
 enable_testing()
 # Test support files
 set(TEST_SUPPORT_FILES
-    test/accumulator.cpp
-    test/accumulator.h
+    test/Accumulator.cpp
+    test/Accumulator.h
 )
 
 # Test executable
 add_executable(tests
-  test/proactortest.cpp
-  test/performancetest.cpp
-  test/queuetest.cpp
+  test/Proactortest.cpp
+  test/Performancetest.cpp
+  test/Queuetest.cpp
   ${TEST_SUPPORT_FILES}
 )
 target_link_libraries(tests

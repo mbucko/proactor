@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "proactorpartition.h"
+#include "ProactorPartition.h"
 
 template <typename KEY, typename HASH_POLICY, std::size_t N_PARTITIONS,
           typename COMPUTABLE>
@@ -17,6 +17,9 @@ class Proactor {
  public:
   template <typename... Args>
   Proactor(std::size_t capacity, const Args&... args) : hash_policy() {
+    static_assert(
+        std::is_constructible_v<Partition, std::size_t, std::size_t, Args...>,
+        "Arguments do not match Partition constructor");
     for (std::size_t i = 0; i < N_PARTITIONS; ++i) {
       new (&partitions_[i]) Partition(capacity, i, args...);
     }
@@ -49,7 +52,8 @@ class Proactor {
 
  private:
   HASH_POLICY hash_policy;
-  // Couldn't make std::array<COMPUTABLE> ctor work.
+  // use char because we need to be able to default initialize the array and
+  // Partition might not have default ctor.
   alignas(Partition) char partitions_[N_PARTITIONS][sizeof(Partition)];
   Partition& partition(int i) {
     return *reinterpret_cast<Partition*>(&partitions_[i]);
@@ -62,12 +66,13 @@ class Proactor {
         std::is_same_v<std::invoke_result_t<T, K>, std::size_t>;
   };
 
-  // TODO assert that args type match
   static_assert(N_PARTITIONS > 0, "N_PARTITIONS must be greater than 0");
   static_assert(hash_policy_checks<HASH_POLICY, KEY>::is_callable,
                 "HASH_POLICY must be callable with KEY");
   static_assert(hash_policy_checks<HASH_POLICY, KEY>::returns_size_t,
                 "HASH_POLICY must return std::size_t");
+  static_assert(std::is_default_constructible_v<HASH_POLICY>,
+                "HASH_POLICY must be default constructible");
 };
 
 #endif  // PROACTOR_H
