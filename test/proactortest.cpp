@@ -30,7 +30,7 @@ class ProactorTest : public ::testing::Test {
   void TearDown() override { proactor.stop(); }
 };
 
-TEST_F(ProactorTest, BasicApi) {
+TEST_F(ProactorTest, BlockingApi) {
   uint32_t retrievedSum0{0};
   uint32_t retrievedSum1{0};
   uint32_t retrievedSum2{0};
@@ -52,6 +52,40 @@ TEST_F(ProactorTest, BasicApi) {
   // Signal all 10 partitions
   proactor.process(&Accumulator::get,
                    [&semaphore](uint32_t sum) { semaphore.release(); });
+
+  for (int i = 0; i < kPartitions; ++i) {
+    semaphore.acquire();
+  }
+  EXPECT_THAT(retrievedSum0, Eq(114u));
+  EXPECT_THAT(retrievedSum1, Eq(117u));
+  EXPECT_THAT(retrievedSum2, Eq(111u));
+}
+
+TEST_F(ProactorTest, NonBlockingApi) {
+  uint32_t retrievedSum0{0};
+  uint32_t retrievedSum1{0};
+  uint32_t retrievedSum2{0};
+  std::counting_semaphore<kPartitions> semaphore{0};
+  // Add 1 to pertition 0
+  ASSERT_TRUE(proactor.try_process(0, &Accumulator::add, []() {}, 1u));
+  // Add 6 to pertition 1
+  ASSERT_TRUE(proactor.try_process(1, &Accumulator::add, []() {}, 6u));
+  // Add 2 to pertition 0
+  ASSERT_TRUE(proactor.try_process(0, &Accumulator::add, []() {}, 2u));
+  // Add 1 to all partitions
+  ASSERT_TRUE(proactor.try_process(&Accumulator::add, []() {}, 1u));
+  ASSERT_TRUE(proactor.try_process(
+      0, &Accumulator::get,
+      [&retrievedSum0](uint32_t sum) { retrievedSum0 = sum; }));
+  ASSERT_TRUE(proactor.try_process(
+      1, &Accumulator::get,
+      [&retrievedSum1](uint32_t sum) { retrievedSum1 = sum; }));
+  ASSERT_TRUE(proactor.try_process(
+      2, &Accumulator::get,
+      [&retrievedSum2](uint32_t sum) { retrievedSum2 = sum; }));
+  // Signal all 10 partitions
+  ASSERT_TRUE(proactor.try_process(
+      &Accumulator::get, [&semaphore](uint32_t sum) { semaphore.release(); }));
 
   for (int i = 0; i < kPartitions; ++i) {
     semaphore.acquire();

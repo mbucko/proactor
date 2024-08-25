@@ -56,6 +56,29 @@ class ProactorPartition {
     queue_.blockingWrite(std::move(task));
   }
 
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool try_process(MemberFunc func, Callback&& callback, Args&&... args) {
+    static_assert(std::is_member_function_pointer_v<MemberFunc>,
+                  "func must be a member function pointer");
+    static_assert(std::is_invocable_v<MemberFunc, COMPUTABLE*, Args...>,
+                  "Arguments provided to 'process()' function must match the "
+                  "parameters of the COMPUTABLE member function");
+    Function task = [func, callback = callback,
+                     ... capturedArgs = args](COMPUTABLE* computable) mutable {
+      if constexpr (std::is_void_v<std::invoke_result_t<MemberFunc, COMPUTABLE*,
+                                                        Args...>>) {
+        std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
+        callback();
+      } else {
+        auto result =
+            std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
+        callback(std::move(result));
+      }
+    };
+
+    return queue_.writeIfNotFull(std::move(task));
+  }
+
   void processQueue() {
     Function task;
     while (true) {

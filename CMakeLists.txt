@@ -30,17 +30,6 @@ elseif(UNIX)
     target_link_libraries(proactor_lib PRIVATE pthread)
 endif()
 
-# Google Test
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/5376968f6948923e2411081fd9372e71a59d8e77.zip
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 find_package(Boost 1.51.0 CONFIG REQUIRED)
 find_package(folly CONFIG REQUIRED)
 find_package(double-conversion REQUIRED)
@@ -50,6 +39,7 @@ find_package(double-conversion REQUIRED)
 find_package(fmt REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
+find_package(GTest 1.10 REQUIRED)
 
 enable_testing()
 # Test support files
@@ -76,8 +66,8 @@ target_link_libraries(tests
     OpenSSL::SSL
     OpenSSL::Crypto
     Threads::Threads
-    GTest::gtest_main
-    GTest::gmock_main
+    GTest::GTest
+    GTest::Main
     proactor_lib
 )
 

@@ -1,5 +1,5 @@
 # Proactor
-The Proactor is a `partitioned`, `multi-threaded`, `asynchronous` task processing framework. It distributes tasks across multiple partitions based on a `key` and a `hash policy`, allowing for concurrent execution of tasks. The class statically allocates a number of partitions and uses a lock-free queue for efficient data passing into the proactor's partitions.
+The Proactor is a `partitioned`, `multi-threaded`, `asynchronous` task processing framework. It distributes tasks across multiple partitions based on a `key` and a `hash policy`, allowing for concurrent execution of tasks. The class statically allocates a number of partitions and uses a lock-free queue for efficient data passing into proactor's partitions.
 
 ## Features
 * Fast task queueing via lock-free queues.
@@ -42,23 +42,33 @@ proactor.stop();
     # Constructor
     Proactor(capacity, args...)
 
-    # Sync
+    # Blocking
     # Process func on a partition associated to the key.
-    process(key, func, callback, args...) : bool
+    process(key, func, callback, args...) : void
 
-    # Process func on aall partitions.
-    process(func, callback, args...) : bool
+    # Process func on all partitions.
+    process(func, callback, args...) : void
 
-    # Async (coming soon...)
+    # non-blocking
     # Process func on a partition associated to the key.
     try_process(key, func, callback, args...) : bool
 
-    # Process func on aall partitions.
+    # Process func on all partitions.
     try_process(func, callback, args...) : bool
 
 ## Dependencies
-* [googletest][googletest]
-* [moodycamel::ConcurrentQueue][ConcurrentQueue]
+The Proactor project relies on the following libraries and frameworks:
+* Boost (version 1.51.0 or higher)
+* Folly
+* double-conversion
+* gflags
+* glog
+* fmt
+* OpenSSL
+* Threads
+* Google Test (for testing)
 
-[googletest]: https://github.com/google/googletest
-[ConcurrentQueue]: https://github.com/cameron314/concurrentqueue
+### Platform-specific dependencies:
+* On Apple platforms: CoreFoundation framework
+* On Unix platforms: pthread (Not yet tested)
+* On Windows (Not yet implemented)

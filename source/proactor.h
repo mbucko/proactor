@@ -105,13 +105,11 @@ class Proactor {
   ///     The key used to determine the target partition.
   /// \param[in] func
   ///     A member function pointer of COMPUTABLE to be executed
-  ///     asynchronously on the selected partition.
+  ///     asynchronously on a partition.
   /// \param[in] callback
   ///     A function to be called with the result of func (if any).
   /// \param[in] args
   ///     Arguments to be passed to func.
-  /// \return
-  ///     Return true if the task was successfully enqueued, false otherwise.
   template <typename MemberFunc, typename Callback, typename... Args>
   void process(const KEY& key, MemberFunc func, Callback&& callback,
                Args&&... args) {
@@ -130,14 +128,11 @@ class Proactor {
   ///
   /// \param[in] func
   ///     A member function pointer of COMPUTABLE to be executed
-  ///     asynchronously on the selected partition.
+  ///     asynchronously on a partition.
   /// \param[in] callback
   ///     A function to be called with the result of func (if any).
   /// \param[in] args
   ///     Arguments to be passed to func.
-  /// \return
-  ///     Returns true if the task was successfully enqueued on all
-  ///     partitions, false if enqueuing failed for any partition.
   template <typename MemberFunc, typename Callback, typename... Args>
   void process(MemberFunc func, Callback&& callback, Args&&... args) {
     for (int i = 0; i < N_PARTITIONS; ++i) {
@@ -145,6 +140,59 @@ class Proactor {
       partition->process(func, std::forward<Callback>(callback),
                          std::forward<Args>(args)...);
     }
+  }
+
+  /// If queue is not full, enqueues a task to be processed asynchronously and
+  /// return true, otherwise return false. Uses the provided key and HASH_POLICY
+  /// to determine the partition on which to enqueue the task. This function is
+  /// thread-safe and can be called concurrently from multiple threads. Calling
+  /// this function after calling 'stop()' results in undefined behavior.
+  ///
+  /// \param[in] key
+  ///     The key used to determine the target partition.
+  /// \param[in] func
+  ///     A member function pointer of COMPUTABLE to be executed
+  ///     asynchronously on a partition.
+  /// \param[in] callback
+  ///     A function to be called with the result of func (if any).
+  /// \param[in] args
+  ///     Arguments to be passed to func.
+  /// \return
+  ///     Return true if the task was successfully enqueued, false otherwise.
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool try_process(const KEY& key, MemberFunc func, Callback&& callback,
+                   Args&&... args) {
+    const std::size_t index = hash_policy(key) % N_PARTITIONS;
+    Partition* partition = reinterpret_cast<Partition*>(&partitions_[index]);
+    return partition->try_process(func, std::forward<Callback>(callback),
+                                  std::forward<Args>(args)...);
+  }
+
+  /// Enqueues a task to be processed asynchronously on each partition. This
+  /// function will return true if enqueuing succeeds for all parttitions,
+  /// otherwise returns false. This function is thread-safe and can be called
+  /// concurrently from multiple threads. Calling this function after calling
+  /// 'stop()' is undefined behavior.
+  ///
+  /// \param[in] func
+  ///     A member function pointer of COMPUTABLE to be executed
+  ///     asynchronously on a partition.
+  /// \param[in] callback
+  ///     A function to be called with the result of func (if any).
+  /// \param[in] args
+  ///     Arguments to be passed to func.
+  /// \return
+  ///     Return true if the task was successfully enqueued for all partitions,
+  ///     false otherwise.
+  template <typename MemberFunc, typename Callback, typename... Args>
+  bool try_process(MemberFunc func, Callback&& callback, Args&&... args) {
+    bool success = true;
+    for (int i = 0; i < N_PARTITIONS; ++i) {
+      Partition* partition = reinterpret_cast<Partition*>(&partitions_[i]);
+      success &= partition->try_process(func, std::forward<Callback>(callback),
+                                        std::forward<Args>(args)...);
+    }
+    return true;
   }
 
   /// Stops all processing threads and prevents further task enqueuing.
