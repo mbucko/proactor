@@ -23,10 +23,6 @@ class MathOperator {
     value_ += value;
     return value;
   }
-  int64_t subtract(int64_t value) {
-    value_ -= value;
-    return value;
-  }
   int64_t get() const { return value_; }
 
  private:
@@ -42,7 +38,7 @@ class PerformanceTest : public ::testing::Test {
   using key_type = int;
 
   static constexpr std::size_t kPartitions = 10;
-  static constexpr std::size_t kQueueSize = 100;
+  static constexpr std::size_t kQueueSize = 128 * 1024;
 
   Proactor<key_type, Hash, 1, MathOperator> endLayer;
   Proactor<key_type, Hash, kPartitions, MathOperator> midLayer;
@@ -54,18 +50,18 @@ class PerformanceTest : public ::testing::Test {
         startLayer(kQueueSize, 0ull) {}
 
   void addValue(int key, int64_t value) {
-    ASSERT_TRUE(startLayer.process(
+    startLayer.process(
         key, &MathOperator::add,
         [key, this](int64_t value) {
-          ASSERT_TRUE(midLayer.process(
+          midLayer.process(
               key, &MathOperator::add,
               [key, this](int64_t value) {
-                ASSERT_TRUE(endLayer.process(
-                    key, &MathOperator::add, [key](int64_t value) {}, value));
+                endLayer.process(
+                    key, &MathOperator::add, [key](int64_t value) {}, value);
               },
-              value));
+              value);
         },
-        value));
+        value);
   }
 
   void wait() {
@@ -80,8 +76,8 @@ class PerformanceTest : public ::testing::Test {
     for (int i = 0; i < kPartitions; ++i) {
       semaphore.acquire();
     }
-    ASSERT_TRUE(endLayer.process(
-        0, &MathOperator::get, [&semaphore](int64_t) { semaphore.release(); }));
+    endLayer.process(0, &MathOperator::get,
+                     [&semaphore](int64_t) { semaphore.release(); });
     semaphore.acquire();
   }
 
@@ -96,21 +92,15 @@ TEST_F(PerformanceTest, Timed_100M_Messages) {
   constexpr uint64_t kMessages = 10 * 1000 * 1000ull;
   std::counting_semaphore<1> semaphore{0};
   for (uint64_t i = 0; i < kMessages; ++i) {
-    const int key = static_cast<int>(i % kPartitions);
-    addValue(key, 1);
+    addValue(static_cast<int>(i % kPartitions), 1);
   }
   wait();
   std::atomic<int64_t> retrievedSum = 0ull;
-  std::cout << "gonna check fnial result, but first block" << std::endl;
-  EXPECT_TRUE(endLayer.process(0, &MathOperator::get,
-                               [&retrievedSum, &semaphore](int64_t sum) {
-                                 retrievedSum = sum;
-                                 semaphore.release();
-                               }));
+  endLayer.process(0, &MathOperator::get,
+                   [&retrievedSum, &semaphore](int64_t sum) {
+                     retrievedSum = sum;
+                     semaphore.release();
+                   });
   semaphore.acquire();
-  std::cout << "received final result" << std::endl;
   EXPECT_THAT(static_cast<int64_t>(retrievedSum), kMessages);
-  // TODO fix race conditioin, some messages are ebing lost
-  // 2: Expected: is equal to 1000000
-  // 2:   Actual: 999494 (of type long long)
 }

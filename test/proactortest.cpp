@@ -36,25 +36,22 @@ TEST_F(ProactorTest, BasicApi) {
   uint32_t retrievedSum2{0};
   std::counting_semaphore<kPartitions> semaphore{0};
   // Add 1 to pertition 0
-  EXPECT_TRUE(proactor.process(0, &Accumulator::add, []() {}, 1u));
+  proactor.process(0, &Accumulator::add, []() {}, 1u);
   // Add 6 to pertition 1
-  EXPECT_TRUE(proactor.process(1, &Accumulator::add, []() {}, 6u));
+  proactor.process(1, &Accumulator::add, []() {}, 6u);
   // Add 2 to pertition 0
-  EXPECT_TRUE(proactor.process(0, &Accumulator::add, []() {}, 2u));
+  proactor.process(0, &Accumulator::add, []() {}, 2u);
   // Add 1 to all partitions
-  EXPECT_TRUE(proactor.process(&Accumulator::add, []() {}, 1u));
-  EXPECT_TRUE(proactor.process(
-      0, &Accumulator::get,
-      [&retrievedSum0](uint32_t sum) { retrievedSum0 = sum; }));
-  EXPECT_TRUE(proactor.process(
-      1, &Accumulator::get,
-      [&retrievedSum1](uint32_t sum) { retrievedSum1 = sum; }));
-  EXPECT_TRUE(proactor.process(
-      2, &Accumulator::get,
-      [&retrievedSum2](uint32_t sum) { retrievedSum2 = sum; }));
+  proactor.process(&Accumulator::add, []() {}, 1u);
+  proactor.process(0, &Accumulator::get,
+                   [&retrievedSum0](uint32_t sum) { retrievedSum0 = sum; });
+  proactor.process(1, &Accumulator::get,
+                   [&retrievedSum1](uint32_t sum) { retrievedSum1 = sum; });
+  proactor.process(2, &Accumulator::get,
+                   [&retrievedSum2](uint32_t sum) { retrievedSum2 = sum; });
   // Signal all 10 partitions
-  EXPECT_TRUE(proactor.process(
-      &Accumulator::get, [&semaphore](uint32_t sum) { semaphore.release(); }));
+  proactor.process(&Accumulator::get,
+                   [&semaphore](uint32_t sum) { semaphore.release(); });
 
   for (int i = 0; i < kPartitions; ++i) {
     semaphore.acquire();

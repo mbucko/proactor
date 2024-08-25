@@ -1,16 +1,16 @@
 #ifndef PROACTORPARTITION_H
 #define PROACTORPARTITION_H
 
+#include <folly/MPMCQueue.h>
+
 #include <cstdint>
 #include <functional>
-#include <iostream>
 #include <sstream>
 #include <thread>
 #include <utility>
 
 #include "AdaptiveSleeper.h"
 #include "ThreadAffinity.h"
-#include "blockingconcurrentqueue.h"
 
 namespace mbucko {
 
@@ -34,15 +34,14 @@ class ProactorPartition {
   ~ProactorPartition() { stop(); }
 
   template <typename MemberFunc, typename Callback, typename... Args>
-  bool process(MemberFunc func, Callback&& callback, Args&&... args) {
+  void process(MemberFunc func, Callback&& callback, Args&&... args) {
     static_assert(std::is_member_function_pointer_v<MemberFunc>,
                   "func must be a member function pointer");
     static_assert(std::is_invocable_v<MemberFunc, COMPUTABLE*, Args...>,
                   "Arguments provided to 'process()' function must match the "
                   "parameters of the COMPUTABLE member function");
-    Function task = [func, callback = std::forward<Callback>(callback),
-                     ... capturedArgs = std::forward<Args>(args)](
-                        COMPUTABLE* computable) mutable {
+    Function task = [func, callback = callback,
+                     ... capturedArgs = args](COMPUTABLE* computable) mutable {
       if constexpr (std::is_void_v<std::invoke_result_t<MemberFunc, COMPUTABLE*,
                                                         Args...>>) {
         std::invoke(func, computable, std::forward<Args>(capturedArgs)...);
@@ -54,13 +53,13 @@ class ProactorPartition {
       }
     };
 
-    return queue_.enqueue(std::move(task));
+    queue_.blockingWrite(std::move(task));
   }
 
   void processQueue() {
     Function task;
     while (true) {
-      while (queue_.try_dequeue(task)) [[likely]] {
+      while (queue_.read(task)) [[likely]] {
         task(&computable_);
         sleeper_.reset();
       }
@@ -91,7 +90,7 @@ class ProactorPartition {
  private:
   const std::size_t partition_index_;
   COMPUTABLE computable_;
-  moodycamel::BlockingConcurrentQueue<Function> queue_;
+  folly::MPMCQueue<Function> queue_;
   std::atomic<bool> running_;
   std::thread thread_;
   AdaptiveSleeper sleeper_;

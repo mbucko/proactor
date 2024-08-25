@@ -41,14 +41,15 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# moodycamel::ConcurrentQueue
-FetchContent_Declare(
-  concurrentqueue
-  GIT_REPOSITORY https://github.com/cameron314/concurrentqueue.git
-  GIT_TAG v1.0.4
-)
-
-FetchContent_MakeAvailable(concurrentqueue)
+find_package(Boost 1.51.0 CONFIG REQUIRED)
+find_package(folly CONFIG REQUIRED)
+find_package(double-conversion REQUIRED)
+find_package(gflags REQUIRED)
+find_package(glog REQUIRED)
+find_package(double-conversion REQUIRED)
+find_package(fmt REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(Threads REQUIRED)
 
 enable_testing()
 # Test support files
@@ -63,13 +64,23 @@ add_executable(tests
   test/Queuetest.cpp
   ${TEST_SUPPORT_FILES}
 )
+
 target_link_libraries(tests
   PRIVATE
-    concurrentqueue
+    ${FOLLY_LIBRARIES}
+    gflags
+    glog::glog
+    double-conversion::double-conversion
+    fmt::fmt
+    ${Boost_LIBRARIES}
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    Threads::Threads
     GTest::gtest_main
     GTest::gmock_main
     proactor_lib
 )
+
 
 include(GoogleTest)
 gtest_discover_tests(tests)

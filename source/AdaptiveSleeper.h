@@ -11,7 +11,7 @@ class AdaptiveSleeper {
   AdaptiveSleeper() : iteration_count_(0) {}
 
   void sleep() {
-    [[likely]] if (iteration_count_ == 0) {
+    [[likely]] if (iteration_count_ < 10) {
       std::this_thread::yield();
     } else {
       auto sleep_time = calculateSleepTime();
@@ -24,11 +24,11 @@ class AdaptiveSleeper {
 
  private:
   std::chrono::microseconds calculateSleepTime() const {
-    [[likely]] if (iteration_count_ <= 10) {
+    [[likely]] if (iteration_count_ <= 20) {
       return std::chrono::microseconds(1);
-    } else [[likely]] if (iteration_count_ <= 20) {
-      return std::chrono::microseconds(10);
     } else [[likely]] if (iteration_count_ <= 30) {
+      return std::chrono::microseconds(10);
+    } else [[likely]] if (iteration_count_ <= 40) {
       return std::chrono::microseconds(100);
     } else {
       // 1ms maximum

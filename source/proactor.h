@@ -113,12 +113,12 @@ class Proactor {
   /// \return
   ///     Return true if the task was successfully enqueued, false otherwise.
   template <typename MemberFunc, typename Callback, typename... Args>
-  bool process(const KEY& key, MemberFunc func, Callback&& callback,
+  void process(const KEY& key, MemberFunc func, Callback&& callback,
                Args&&... args) {
     const std::size_t index = hash_policy(key) % N_PARTITIONS;
     Partition* partition = reinterpret_cast<Partition*>(&partitions_[index]);
-    return partition->process(func, std::forward<Callback>(callback),
-                              std::forward<Args>(args)...);
+    partition->process(func, std::forward<Callback>(callback),
+                       std::forward<Args>(args)...);
   }
 
   /// Enqueues a task to be processed asynchronously on each partition. This
@@ -139,14 +139,12 @@ class Proactor {
   ///     Returns true if the task was successfully enqueued on all
   ///     partitions, false if enqueuing failed for any partition.
   template <typename MemberFunc, typename Callback, typename... Args>
-  bool process(MemberFunc func, Callback&& callback, Args&&... args) {
-    bool success = true;
+  void process(MemberFunc func, Callback&& callback, Args&&... args) {
     for (int i = 0; i < N_PARTITIONS; ++i) {
       Partition* partition = reinterpret_cast<Partition*>(&partitions_[i]);
-      success &= partition->process(func, std::forward<Callback>(callback),
-                                    std::forward<Args>(args)...);
+      partition->process(func, std::forward<Callback>(callback),
+                         std::forward<Args>(args)...);
     }
-    return success;
   }
 
   /// Stops all processing threads and prevents further task enqueuing.
