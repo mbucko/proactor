@@ -49,9 +49,9 @@ set(TEST_SUPPORT_FILES
 
 # Test executable
 add_executable(tests
-  test/Proactortest.cpp
-  test/Performancetest.cpp
-  test/Queuetest.cpp
+  test/ProactorTest.cpp
+  test/PerformanceTest.cpp
+  test/QueueTest.cpp
   ${TEST_SUPPORT_FILES}
 )
 
